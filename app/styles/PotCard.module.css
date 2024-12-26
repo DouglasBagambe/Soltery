@@ -1,91 +1,109 @@
 .wrapper {
-  background-color: #242833;
-  min-height: 200px;
-  width: 50%;
-  margin: 0 auto;
+  background: linear-gradient(
+    145deg,
+    #2a2f3a,
+    #1e2128
+  ); /* Subtle gradient for depth */
+  min-height: 250px; /* Increased height for better spacing */
+  width: 60%; /* Adjusted width for better proportions */
+  margin: 50px auto; /* Central alignment with more spacing */
   border-radius: 2rem;
-  box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
-  -webkit-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
-  -moz-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
+  box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.6),
+    -8px -8px 15px rgba(255, 255, 255, 0.1); /* Neumorphic effect */
   display: flex;
-  padding: 20px;
   flex-direction: column;
-  margin-top: 40px;
+  padding: 30px;
+  gap: 20px; /* Even spacing between child elements */
 }
 
 .title {
-  font-size: 2rem;
-  font-weight: bolder;
-  color: #fff;
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #f45358;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  text-transform: uppercase; /* Modern touch with uppercase */
+  letter-spacing: 2px; /* Spacing for a clean aesthetic */
 }
 
 .pot {
-  font-size: 1.5rem;
-  font-weight: bolder;
+  font-size: 1.7rem;
+  font-weight: bold;
   color: #fff;
   text-align: center;
-  flex: 1;
 }
 
 .potAmount {
-  font-size: 1.5rem;
-  font-weight: bolder;
-  color: #fff;
+  font-size: 2rem; /* Highlight the amount by making it larger */
+  font-weight: bold;
+  color: #f45358;
   text-align: center;
 }
 
 .btn {
-  background-color: #1e2128;
-  width: 50%;
-  display: flex;
-  justify-content: center;
-  place-self: center;
+  background: linear-gradient(145deg, #1e2128, #292d36); /* Soft gradient */
+  width: 70%; /* Increased width for balance */
   color: #f45358;
-  padding: 15px 32px;
+  padding: 15px 0; /* Adjusted padding for uniform height */
   text-align: center;
   text-decoration: none;
-  margin-top: 20px;
+  margin: 20px auto; /* Centered alignment */
   cursor: pointer;
-  border-radius: 1.5rem;
-  font-weight: bolder;
+  border-radius: 2rem; /* Larger radius for smoother edges */
+  font-weight: bold;
   font-size: 1.5rem;
-  border: 1px solid #f45358;
+  border: 2px solid #f45358; /* Bold border for prominence */
+  transition: all 0.3s ease; /* Smooth hover effect */
+}
+
+.btn:hover {
+  background: #f45358; /* Highlight on hover */
+  color: #fff; /* Contrast text color */
+  transform: translateY(-3px); /* Subtle lift effect */
 }
 
 .recentWinnerTitle {
   font-size: 1.5rem;
-  font-weight: bolder;
+  font-weight: bold;
   color: #fff;
-  text-align: center;
-  margin-top: 20px;
+  text-align: left; /* Align to the left for a cleaner hierarchy */
 }
 
 .winner {
   font-size: 1.5rem;
-  font-weight: bolder;
-  color: #fff;
-  text-align: center;
+  font-weight: bold;
   color: #f45358;
+  text-align: left; /* Match alignment with the title */
 }
 
 .textAccent {
   color: #f45358;
+  font-weight: bold;
 }
 
 .drawWinnerBtn {
-  background-color: #242833;
-  display: flex;
+  background: linear-gradient(
+    145deg,
+    #292d36,
+    #242833
+  ); /* Gradient for depth */
+  display: inline-flex; /* Inline-flex for compactness */
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
-  width: 20%;
-  border: 1px solid #f2505e;
-  border-radius: 1.2rem;
-  padding: 10px 20px;
+  margin: 20px auto 0; /* Centered alignment with margin */
+  width: auto; /* Flexible width */
+  padding: 12px 30px; /* Balanced padding */
+  border: 2px solid #f2505e; /* Bold border for consistency */
+  border-radius: 1.5rem;
   font-size: 1.3rem;
-  font-weight: bolder;
+  font-weight: bold;
   cursor: pointer;
   color: #f2505e;
+  transition: all 0.3s ease; /* Smooth hover effect */
+}
+
+.drawWinnerBtn:hover {
+  background: #f2505e; /* Bright background on hover */
+  color: #fff; /* Contrast text color */
+  transform: translateY(-2px); /* Subtle lift effect */
 }
