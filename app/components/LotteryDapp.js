@@ -202,13 +202,42 @@ const LotteryDapp = () => {
       }, {})
     : [];
 
+  const lotteryHistory = () => {
+    const { lotteryHistory } = useSolana();
+
+    return (
+      <div>
+        {lotteryHistory.length > 0 ? (
+          lotteryHistory.map((history, index) => (
+            <div key={index}>
+              <p>Lottery ID: {history.lotteryId}</p>
+              <p>Winner Address: {history.winnerAddress}</p>
+              <p>Prize: {history.prize} SOL</p>
+            </div>
+          ))
+        ) : (
+          <p>No lottery history available.</p>
+        )}
+      </div>
+    );
+  };
+
+  const [loadingDots, setLoadingDots] = React.useState("");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoadingDots((prev) => (prev.length < 3 ? prev + "." : ""));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div style={containerStyle}>
       <div style={mainWrapperStyle}>
         <div style={headerStyle}>
           <div>
             <h1 style={titleStyle}>
-              Soltery #{currentLottery?.id || "Loading..."}
+              Soltery #{currentLottery?.id || `${loadingDots}`}
             </h1>
             <p style={subtitleStyle}>Your ticket to decentralized fortune</p>
           </div>
@@ -216,87 +245,163 @@ const LotteryDapp = () => {
         </div>
 
         <div style={gridContainerStyle}>
-          <Card style={cardStyle}>
-            <CardHeader style={cardHeaderStyle}>
-              <CardTitle style={cardTitleStyle}>
-                <Ticket
-                  style={{
-                    width: "1.5rem",
-                    height: "1.5rem",
-                    color: "#60a5fa",
-                  }}
-                />
-                Current Lottery
-              </CardTitle>
-            </CardHeader>
-            <CardContent style={cardContentStyle}>
-              <div style={lotteryCardStyle}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: "600" }}>
-                    Pot:{" "}
-                    {currentLottery
-                      ? (
-                          (currentLottery.ticketPrice *
-                            currentLottery.lastTicketId) /
-                          1000000000
-                        ).toFixed(2)
-                      : "0"}{" "}
-                    SOL
-                  </h3>
-                  <span style={statusBadgeStyle}>
-                    {currentLottery?.winnerId ? "Completed" : "Active"}
-                  </span>
-                </div>
+          <div style={{ flex: 1 }}>
+            <Card style={cardStyle}>
+              <CardHeader style={cardHeaderStyle}>
+                <CardTitle style={cardTitleStyle}>
+                  <Ticket
+                    style={{
+                      width: "1.5rem",
+                      height: "1.5rem",
+                      color: "#60a5fa",
+                    }}
+                  />
+                  Current Lottery
+                </CardTitle>
+              </CardHeader>
+              <CardContent style={cardContentStyle}>
+                <div style={lotteryCardStyle}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    <h3 style={{ fontSize: "1.25rem", fontWeight: "600" }}>
+                      Pot:{" "}
+                      {currentLottery
+                        ? (
+                            (currentLottery.ticketPrice *
+                              currentLottery.lastTicketId) /
+                            1000000000
+                          ).toFixed(2)
+                        : "0"}{" "}
+                      SOL
+                    </h3>
+                    <span style={statusBadgeStyle}>
+                      {currentLottery?.winnerId ? "Completed" : "Active"}
+                    </span>
+                  </div>
 
-                {wallet.connected &&
-                  currentLottery &&
-                  !currentLottery.winnerId && (
-                    <div style={actionButtonsStyle}>
-                      <button
-                        style={buyButtonStyle}
-                        onMouseEnter={(e) =>
-                          (e.target.style.backgroundColor = "#1d4ed8")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.target.style.backgroundColor = "#2563eb")
-                        }
-                        onClick={handleBuyTicket}
-                      >
-                        Buy Ticket (
-                        {(currentLottery.ticketPrice / 1000000000).toFixed(2)}{" "}
-                        SOL)
-                      </button>
-                      {currentLottery.authority.toString() ===
-                        wallet.publicKey?.toString() && (
+                  {wallet.connected &&
+                    currentLottery &&
+                    !currentLottery.winnerId && (
+                      <div style={actionButtonsStyle}>
                         <button
-                          style={pickWinnerButtonStyle}
+                          style={buyButtonStyle}
                           onMouseEnter={(e) =>
-                            (e.target.style.backgroundColor = "#6d28d9")
+                            (e.target.style.backgroundColor = "#1d4ed8")
                           }
                           onMouseLeave={(e) =>
-                            (e.target.style.backgroundColor = "#7c3aed")
+                            (e.target.style.backgroundColor = "#2563eb")
                           }
-                          onClick={handlePickWinner}
+                          onClick={handleBuyTicket}
                         >
-                          Pick Winner
+                          Buy Ticket (
+                          {(currentLottery.ticketPrice / 1000000000).toFixed(2)}{" "}
+                          SOL)
                         </button>
+                        {currentLottery.authority.toString() ===
+                          wallet.publicKey?.toString() && (
+                          <button
+                            style={pickWinnerButtonStyle}
+                            onMouseEnter={(e) =>
+                              (e.target.style.backgroundColor = "#6d28d9")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.target.style.backgroundColor = "#7c3aed")
+                            }
+                            onClick={handlePickWinner}
+                          >
+                            Pick Winner
+                          </button>
+                        )}
+                      </div>
+                    )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card style={cardStyle}>
+              <CardHeader style={cardHeaderStyle}>
+                <CardTitle style={cardTitleStyle}>Other Lotteries</CardTitle>
+              </CardHeader>
+              <CardContent style={cardContentStyle}>
+                <div style={lotteryCardStyle}>
+                  <div style={{ margin: "0 1rem", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 2fr 1fr 1fr",
+                        padding: "0.75rem 0",
+                        fontWeight: "600",
+                        backgroundColor: "#f3f4f6",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <div
+                        style={{ textAlign: "center", fontSize: "0.875rem" }}
+                      >
+                        💳 Lottery
+                      </div>
+                      <div
+                        style={{ textAlign: "center", fontSize: "0.875rem" }}
+                      >
+                        💳 Address
+                      </div>
+                      <div
+                        style={{ textAlign: "center", fontSize: "0.875rem" }}
+                      >
+                        💳 Ticket
+                      </div>
+                      <div
+                        style={{ textAlign: "center", fontSize: "0.875rem" }}
+                      >
+                        💲 Amount
+                      </div>
+                    </div>
+
+                    {/* List of lottery history */}
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      {lotteryHistory && lotteryHistory.length > 0 ? (
+                        lotteryHistory.map((h, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 2fr 1fr 1fr",
+                              padding: "0.75rem 0",
+                              textAlign: "center",
+                              borderBottom: "1px solid #e5e7eb",
+                            }}
+                          >
+                            <div>#{h.lotteryId}</div>
+                            <div>
+                              {shortenPk(
+                                h.winnerAddress ||
+                                  "4koeNJ39zejjuCyVQdZmzsx28CfJoarrv4vmsuHjFSB6" // fallback if winnerAddress is not available
+                              )}
+                            </div>
+                            <div>#{h.winnerId}</div>
+                            <div>+{h.prize} SOL</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{ textAlign: "center", padding: "1rem" }}>
+                          No lottery history available.
+                        </div>
                       )}
                     </div>
-                  )}
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
-          >
+          {/* Second Group: Ticket Sales and Your Tickets */}
+          <div style={{ flex: 1 }}>
             <Card style={cardStyle}>
               <CardHeader style={cardHeaderStyle}>
                 <CardTitle style={cardTitleStyle}>Ticket Sales</CardTitle>
@@ -307,7 +412,7 @@ const LotteryDapp = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent style={cardContentStyle}>
-                <div style={{ height: "12rem" }}>
+                <div style={{ height: "7.4rem" }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={Object.values(ticketHistory)}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e3a8a" />
@@ -348,60 +453,68 @@ const LotteryDapp = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent style={cardContentStyle}>
-                {tickets &&
-                  tickets
-                    .filter(
-                      (ticket) =>
-                        ticket.account.authority.toString() ===
-                        wallet.publicKey?.toString()
-                    )
-                    .map((ticket, idx) => (
-                      <div key={idx} style={winnerCardStyle}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div>
-                            <p
-                              style={{ color: "#fcd34d", fontSize: "0.875rem" }}
-                            >
-                              Ticket #{ticket.account.id}
-                            </p>
-                            <p style={{ fontWeight: "500" }}>
-                              {ticket.account.authority.toString().slice(0, 4)}
-                              ...
-                              {ticket.account.authority.toString().slice(-4)}
-                            </p>
-                          </div>
-                          {currentLottery?.winnerId === ticket.account.id &&
-                            !currentLottery.claimed && (
-                              <button
+                <div style={{ height: "7.7rem" }}>
+                  {tickets &&
+                    tickets
+                      .filter(
+                        (ticket) =>
+                          ticket.account.authority.toString() ===
+                          wallet.publicKey?.toString()
+                      )
+                      .map((ticket, idx) => (
+                        <div key={idx} style={winnerCardStyle}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <div>
+                              <p
                                 style={{
-                                  ...buyButtonStyle,
-                                  padding: "0.5rem 1rem",
+                                  color: "#fcd34d",
                                   fontSize: "0.875rem",
                                 }}
-                                onClick={() =>
-                                  claimPrize(
-                                    currentLottery.id,
-                                    ticket.account.id
-                                  )
-                                }
                               >
-                                Claim Prize
-                              </button>
-                            )}
+                                Ticket #{ticket.account.id}
+                              </p>
+                              <p style={{ fontWeight: "500" }}>
+                                {ticket.account.authority
+                                  .toString()
+                                  .slice(0, 4)}
+                                ...
+                                {ticket.account.authority.toString().slice(-4)}
+                              </p>
+                            </div>
+                            {currentLottery?.winnerId === ticket.account.id &&
+                              !currentLottery.claimed && (
+                                <button
+                                  style={{
+                                    ...buyButtonStyle,
+                                    padding: "0.5rem 1rem",
+                                    fontSize: "0.875rem",
+                                  }}
+                                  onClick={() =>
+                                    claimPrize(
+                                      currentLottery.id,
+                                      ticket.account.id
+                                    )
+                                  }
+                                >
+                                  Claim Prize
+                                </button>
+                              )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
+        {/* Create New Lottery */}
         {wallet.connected && (
           <Card style={{ ...cardStyle, marginTop: "2rem" }}>
             <CardHeader style={cardHeaderStyle}>

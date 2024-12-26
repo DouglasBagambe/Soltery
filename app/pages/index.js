@@ -11,7 +11,8 @@ import { clusterApiUrl } from "@solana/web3.js";
 require("@solana/wallet-adapter-react-ui/styles.css");
 
 import LotteryDapp from "../components/LotteryDapp";
-import { AppProvider } from "../context/context";
+// import { AppProvider } from "../context/context";
+import { SolanaProvider } from "../context/SolanaContext";
 
 export default function Home() {
   const endpoint = clusterApiUrl(WalletAdapterNetwork.Devnet);
@@ -21,9 +22,9 @@ export default function Home() {
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <AppProvider>
+          <SolanaProvider>
             <LotteryDapp />
-          </AppProvider>
+          </SolanaProvider>
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

@@ -17,6 +17,8 @@ export const SolanaProvider = ({ children }) => {
   const [currentLottery, setCurrentLottery] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [winners, setWinners] = useState([]);
+  const [lotteryHistory, setLotteryHistory] = useState([]);
+  const [lotteryId, setLotteryId] = useState(null);
 
   const program = useMemo(() => {
     if (wallet?.publicKey) {
@@ -169,6 +171,7 @@ export const SolanaProvider = ({ children }) => {
       const lotteryAddress = await getLotteryAddress(master.lastId);
       const lottery = await program.account.lottery.fetch(lotteryAddress);
       setCurrentLottery(lottery);
+      setLotteryId(master.lastId);
     } catch (error) {
       console.error("Error fetching current lottery:", error);
     }
@@ -191,11 +194,41 @@ export const SolanaProvider = ({ children }) => {
     }
   };
 
+  const fetchLotteryHistory = async () => {
+    const history = [];
+    if (!lotteryId) return;
+
+    for (const i in new Array(lotteryId).fill(null)) {
+      const id = lotteryId - parseInt(i);
+      if (!id) break;
+
+      const lotteryAddress = await getLotteryAddress(id);
+      const lottery = await program.account.lottery.fetch(lotteryAddress);
+      const winnerId = lottery.winnerId;
+      if (!winnerId) continue;
+
+      const ticketAddress = await getTicketAddress(lotteryAddress, winnerId);
+      const ticket = await program.account.ticket.fetch(ticketAddress);
+
+      history.push({
+        lotteryId: id,
+        winnerId,
+        winnerAddress: ticket.authority,
+        prize: getTotalPrize(lottery),
+      });
+    }
+
+    setLotteryHistory(history);
+  };
+
   useEffect(() => {
     if (program) {
       fetchCurrentLottery();
+      if (lotteryId) {
+        fetchLotteryHistory();
+      }
     }
-  }, [program]);
+  }, [program, lotteryId]);
 
   return (
     <SolanaContext.Provider
@@ -204,12 +237,14 @@ export const SolanaProvider = ({ children }) => {
         currentLottery,
         tickets,
         winners,
+        lotteryHistory, // Now this is part of the context
         createLottery,
         buyTicket,
         pickWinner,
         claimPrize,
         fetchCurrentLottery,
         fetchTickets,
+        fetchLotteryHistory, // Add this function to the context
       }}
     >
       {children}
