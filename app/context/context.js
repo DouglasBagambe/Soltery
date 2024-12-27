@@ -1,9 +1,10 @@
 import { createContext, useState, useEffect, useContext, useMemo } from "react";
 import { BN } from "@project-serum/anchor";
-import { SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { SystemProgram, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import bs58 from "bs58";
 import toast from "react-hot-toast";
+import * as anchor from "@project-serum/anchor";
 
 import {
   getLotteryAddress,
@@ -14,7 +15,6 @@ import {
 } from "../utils/program";
 import { confirmTx, mockWallet } from "../utils/helper";
 
-// Context creation
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
@@ -26,11 +26,12 @@ export const AppProvider = ({ children }) => {
   const [lotteryId, setLotteryId] = useState();
   const [lotteryHistory, setLotteryHistory] = useState([]);
   const [userWinningId, setUserWinningId] = useState(false);
+  const [tickets, setTickets] = useState([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [intialized, setIntialized] = useState(false);
+  const [userTicketHistory, setUserTicketHistory] = useState([]);
 
-  // Get provider
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const program = useMemo(() => {
@@ -48,11 +49,12 @@ export const AppProvider = ({ children }) => {
     getPot();
     getPlayers();
     getHistory();
+    fetchTickets();
+    fetchUserTicketHistory();
   }, [lottery]);
 
   const updateState = async () => {
     if (!program) return;
-
     try {
       if (!masterAddress) {
         const masterAddress = await getMasterAddress();
@@ -68,29 +70,120 @@ export const AppProvider = ({ children }) => {
       const lottery = await program.account.lottery.fetch(lotteryAddress);
       setLottery(lottery);
 
-      // Get user's tickets for the current lottery
       if (!wallet?.publicKey) return;
       const userTickets = await program.account.ticket.all([
         {
           memcmp: {
-            bytes: bs58.encode(new BN(lotteryId).toArrayLike(Buffer, "le", 4)),
+            bytes: bs58.encode(
+              new BN(master.lastId).toArrayLike(Buffer, "le", 4)
+            ),
             offset: 12,
           },
         },
         { memcmp: { bytes: wallet.publicKey.toBase58(), offset: 16 } },
       ]);
 
-      // Check whether any of the user tickets win
       const userWin = userTickets.some(
         (t) => t.account.id === lottery.winnerId
       );
-      if (userWin) {
-        setUserWinningId(lottery.winnerId);
-      } else {
-        setUserWinningId(null);
-      }
+      setUserWinningId(userWin ? lottery.winnerId : null);
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
+    }
+  };
+
+  const createLottery = async (ticketPrice) => {
+    try {
+      const master = await program.account.master.fetch(masterAddress);
+      const nextLotteryId = master.lastId + 1;
+      const [lotteryAddress] = await PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("lottery"),
+          new anchor.BN(nextLotteryId).toArrayLike(Buffer, "le", 4),
+        ],
+        program.programId
+      );
+
+      await program.methods
+        .createLottery(new anchor.BN(ticketPrice))
+        .accounts({
+          lottery: lotteryAddress,
+          master: masterAddress,
+          authority: wallet.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .rpc();
+
+      await updateState();
+    } catch (error) {
+      console.error("Error creating lottery:", error);
+      throw error;
+    }
+  };
+
+  const buyTicket = async () => {
+    if (!lottery) return;
+    try {
+      const nextTicketId = lottery.lastTicketId + 1;
+      const ticketAddress = await getTicketAddress(
+        lotteryAddress,
+        nextTicketId
+      );
+
+      await program.methods
+        .buyTicket(new BN(lotteryId))
+        .accounts({
+          lottery: lotteryAddress,
+          ticket: ticketAddress,
+          buyer: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      await fetchTickets();
+      await updateState();
+    } catch (error) {
+      console.error("Error buying ticket:", error);
+      throw error;
+    }
+  };
+
+  const pickWinner = async () => {
+    try {
+      await program.methods
+        .pickWinner(new BN(lotteryId))
+        .accounts({
+          lottery: lotteryAddress,
+          authority: wallet.publicKey,
+        })
+        .rpc();
+
+      await updateState();
+    } catch (error) {
+      console.error("Error picking winner:", error);
+      throw error;
+    }
+  };
+
+  const claimPrize = async (lotteryId, ticketId) => {
+    try {
+      const lotteryAddress = await getLotteryAddress(lotteryId);
+      const ticketAddress = await getTicketAddress(lotteryAddress, ticketId);
+
+      await program.methods
+        .claimPrize(new BN(lotteryId), new BN(ticketId))
+        .accounts({
+          lottery: lotteryAddress,
+          ticket: ticketAddress,
+          authority: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      await updateState();
+    } catch (error) {
+      console.error("Error claiming prize:", error);
+      throw error;
     }
   };
 
@@ -100,15 +193,30 @@ export const AppProvider = ({ children }) => {
   };
 
   const getPlayers = async () => {
-    const players = [lottery.lastTicketId]; // Placeholder - adjust if necessary
+    const players = [lottery.lastTicketId];
     setPlayers(players);
+  };
+
+  const fetchTickets = async () => {
+    try {
+      const tickets = await program.account.ticket.all([
+        {
+          memcmp: {
+            offset: 4,
+            bytes: lotteryId.toString(),
+          },
+        },
+      ]);
+      setTickets(tickets);
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+    }
   };
 
   const getHistory = async () => {
     if (!lotteryId) return;
 
     const history = [];
-
     for (const i in new Array(lotteryId).fill(null)) {
       const id = lotteryId - parseInt(i);
       if (!id) break;
@@ -132,9 +240,21 @@ export const AppProvider = ({ children }) => {
     setLotteryHistory(history);
   };
 
-  // Now, add missing functionalities like buyTicket, claimPrize, etc., as before...
+  const fetchUserTicketHistory = async () => {
+    if (!program || !wallet?.publicKey) return;
 
-  // Render
+    try {
+      // Get all user tickets for all lotteries
+      const allUserTickets = await program.account.ticket.all([
+        { memcmp: { bytes: wallet.publicKey.toBase58(), offset: 16 } },
+      ]);
+
+      setUserTicketHistory(allUserTickets);
+    } catch (error) {
+      console.error("Error fetching user ticket history:", error);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -143,14 +263,23 @@ export const AppProvider = ({ children }) => {
         isLotteryAuthority:
           wallet && lottery && wallet.publicKey.equals(lottery.authority),
         lotteryId,
+        lottery,
         lotteryPot,
         lotteryPlayers,
         lotteryHistory,
+        tickets,
         isFinished: lottery && lottery.winnerId,
         canClaim: lottery && !lottery.claimed && userWinningId,
         error,
         success,
         intialized,
+        createLottery,
+        buyTicket,
+        pickWinner,
+        claimPrize,
+        fetchTickets,
+        getHistory,
+        userTicketHistory,
       }}
     >
       {children}
