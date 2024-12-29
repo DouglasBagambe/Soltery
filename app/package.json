@@ -25,6 +25,7 @@
     "recharts": "^2.15.0"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.9.2",
     "@shadcn/ui": "^0.0.4",
     "autoprefixer": "^10.4.20",
     "eslint": "8.21.0",
