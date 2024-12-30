@@ -227,7 +227,7 @@ const LotteryDapp = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-blue-900/50">
+      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-lg border-b border-blue-900/50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div>
@@ -241,26 +241,12 @@ const LotteryDapp = () => {
             <WalletMultiButton />
           </div>
         </div>
-        {/* Debug view */}
-        {/* <div className="mb-4 p-4 bg-gray-900 rounded-lg">
-          <p className="text-xs text-gray-400">Debug Info:</p>
-          <pre className="text-xs text-gray-400 overflow-auto">
-            {JSON.stringify(
-              {
-                ticketsCount: tickets?.length || 0,
-                ticketDetails: tickets,
-                userPubKey: wallet.publicKey?.toString(),
-                lotteryId: lottery?.id,
-              },
-              null,
-              2
-            )}
-          </pre>
-        </div> */}
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 pt-28 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main content */}
+      <main className="max-w-[1920px] mx-auto px-6 py-8">
+        {/* All cards in one row */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div>
             <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl">
               <CardHeader className="border-b border-blue-900/20">
@@ -322,6 +308,7 @@ const LotteryDapp = () => {
             )}
           </div>
 
+          {/* Performance & Analytics */}
           <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl">
             <CardHeader className="border-b border-blue-900/20">
               <CardTitle className="flex items-center gap-2 text-white">
@@ -475,41 +462,15 @@ const LotteryDapp = () => {
             </CardContent>
           </Card>
 
+          {/* My Ticket History */}
           <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl">
             <CardHeader className="border-b border-blue-900/20">
               <CardTitle className="flex items-center gap-2 text-white">
-                Lottery History
+                My Ticket History
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="bg-blue-950/50 border border-blue-800/20 rounded-lg p-4">
-                <div className="grid grid-cols-4 gap-4 py-3 text-sm font-semibold text-center text-blue-200 border-b border-blue-800/20">
-                  <div>Lottery ID</div>
-                  <div>Winner</div>
-                  <div>Winning Ticket</div>
-                  <div>Prize</div>
-                </div>
-
-                <div className="divide-y divide-blue-800/20">
-                  {lotteryHistory && lotteryHistory.length > 0 ? (
-                    lotteryHistory.map((h, i) => (
-                      <div
-                        key={i}
-                        className="grid grid-cols-4 gap-4 py-3 text-center text-blue-100"
-                      >
-                        <div>#{h.lotteryId}</div>
-                        <div>{shortenPk(h.winnerAddress)}</div>
-                        <div>#{h.winnerId}</div>
-                        <div>{h.prize} SOL</div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-blue-300">
-                      No lottery history available.
-                    </div>
-                  )}
-                </div>
-
                 {wallet.connected && (
                   <div className="space-y-3 mt-6">
                     {(() => {
@@ -615,6 +576,45 @@ const LotteryDapp = () => {
                     })()}
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Overall Lottery History */}
+          <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl">
+            <CardHeader className="border-b border-blue-900/20">
+              <CardTitle className="flex items-center gap-2 text-white">
+                Overall Lottery History
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="bg-blue-950/50 border border-blue-800/20 rounded-lg p-4">
+                <div className="grid grid-cols-4 gap-4 py-3 text-sm font-semibold text-center text-blue-200 border-b border-blue-800/20">
+                  <div>Lottery ID</div>
+                  <div>Winner</div>
+                  <div>Winning Ticket</div>
+                  <div>Prize</div>
+                </div>
+
+                <div className="divide-y divide-blue-800/20">
+                  {lotteryHistory && lotteryHistory.length > 0 ? (
+                    lotteryHistory.map((h, i) => (
+                      <div
+                        key={i}
+                        className="grid grid-cols-4 gap-4 py-3 text-center text-blue-100"
+                      >
+                        <div>#{h.lotteryId}</div>
+                        <div>{shortenPk(h.winnerAddress)}</div>
+                        <div>#{h.winnerId}</div>
+                        <div>{h.prize} SOL</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-blue-300">
+                      No lottery history available.
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
