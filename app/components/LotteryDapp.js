@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { Ticket, Trophy, Coins } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import dynamic from "next/dynamic";
+
+import { Sparkles } from "lucide-react";
 const WalletMultiButton = dynamic(
   () =>
     import("@solana/wallet-adapter-react-ui").then(
@@ -227,18 +229,48 @@ const LotteryDapp = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black">
-      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-lg border-b border-blue-900/50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                Soltery
-              </h1>
-              <p className="text-blue-300 text-sm mt-1">
+      <header className="sticky top-0 z-50 transition-all duration-300 bg-gradient-to-r from-black/80 to-black/90 backdrop-blur-lg border-b border-blue-900/50">
+        <div className="relative overflow-hidden w-full mx-auto px-6 py-4">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 w-full h-full">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full filter blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full filter blur-3xl animate-pulse delay-1000" />
+          </div>
+
+          {/* Main content */}
+          <div className="flex justify-between items-center relative z-10">
+            {/* Logo section */}
+            <div className="group cursor-pointer">
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <Coins className="w-8 h-8 text-yellow-400 animate-bounce" />
+                  <Sparkles
+                    className="absolute -top-1 -right-1 w-4 h-4 text-yellow-300 animate-spin"
+                    style={{
+                      left: "50%",
+                      top: "50%",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                </div>
+                <h1 className="text-4xl font-bold">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+                    Soltery
+                  </span>
+                </h1>
+              </div>
+              <p className="text-blue-300 text-sm mt-1 transform transition-all group-hover:translate-x-2">
                 Your ticket to decentralized fortune
               </p>
             </div>
-            <WalletMultiButton />
+
+            {/* Wallet Button */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-30 group-hover:opacity-100 transition-all" />
+              <div className="relative">
+                <WalletMultiButton />
+              </div>
+            </div>
           </div>
         </div>
       </header>
