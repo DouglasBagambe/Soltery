@@ -232,7 +232,7 @@ const LotteryDapp = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                Soltery #{lottery?.id || `${loadingDots}`}
+                Soltery
               </h1>
               <p className="text-blue-300 text-sm mt-1">
                 Your ticket to decentralized fortune
@@ -252,7 +252,10 @@ const LotteryDapp = () => {
               <CardHeader className="border-b border-blue-900/20">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Ticket className="w-6 h-6 text-blue-400" />
-                  Current Lottery
+                  Current Lottery{" "}
+                  <span className="text-green-400">
+                    #{lottery?.id || `${loadingDots}`}
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
