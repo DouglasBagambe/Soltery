@@ -309,8 +309,8 @@ const LotteryDapp = () => {
           </div>
 
           {/* Performance & Analytics */}
-          <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl">
-            <CardHeader className="border-b border-blue-900/20">
+          <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl h-[600px] flex flex-col">
+            <CardHeader className="border-b border-blue-900/20 flex-none">
               <CardTitle className="flex items-center gap-2 text-white">
                 <Trophy className="w-6 h-6 text-amber-400" />
                 Performance & Analytics
@@ -319,7 +319,7 @@ const LotteryDapp = () => {
                 Your ticket win/loss history and performance analytics
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 overflow-y-auto flex-1">
               {wallet.connected ? (
                 <>
                   <div className="bg-indigo-900/30 p-4 rounded-lg border border-indigo-500/20 mb-4">
@@ -376,7 +376,7 @@ const LotteryDapp = () => {
                     </div>
                   </div>
 
-                  <div className="h-48">
+                  <div className="h-60">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
                         data={lotteryHistory?.map((h) => ({
@@ -463,16 +463,16 @@ const LotteryDapp = () => {
           </Card>
 
           {/* My Ticket History */}
-          <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl">
-            <CardHeader className="border-b border-blue-900/20">
+          <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl h-[600px] flex flex-col">
+            <CardHeader className="border-b border-blue-900/20 flex-none">
               <CardTitle className="flex items-center gap-2 text-white">
                 My Ticket History
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 overflow-y-auto flex-1">
               <div className="bg-blue-950/50 border border-blue-800/20 rounded-lg p-4">
                 {wallet.connected && (
-                  <div className="space-y-3 mt-6">
+                  <div className="space-y-3">
                     {(() => {
                       const allTickets = [
                         ...(tickets?.filter(
@@ -581,15 +581,15 @@ const LotteryDapp = () => {
           </Card>
 
           {/* Overall Lottery History */}
-          <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl">
-            <CardHeader className="border-b border-blue-900/20">
+          <Card className="bg-black/40 backdrop-blur border border-blue-900/20 shadow-xl h-[600px] flex flex-col">
+            <CardHeader className="border-b border-blue-900/20 flex-none">
               <CardTitle className="flex items-center gap-2 text-white">
                 Overall Lottery History
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 overflow-y-auto flex-1">
               <div className="bg-blue-950/50 border border-blue-800/20 rounded-lg p-4">
-                <div className="grid grid-cols-4 gap-4 py-3 text-sm font-semibold text-center text-blue-200 border-b border-blue-800/20">
+                <div className="grid grid-cols-4 gap-4 py-3 text-sm font-semibold text-center text-blue-200 border-b border-blue-800/20 sticky top-0 bg-blue-950/50 backdrop-blur">
                   <div>Lottery ID</div>
                   <div>Winner</div>
                   <div>Winning Ticket</div>
