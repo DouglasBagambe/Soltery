@@ -1,7 +1,14 @@
 import React, { useEffect } from "react";
 import { Ticket, Trophy, Coins } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import dynamic from "next/dynamic";
+const WalletMultiButton = dynamic(
+  () =>
+    import("@solana/wallet-adapter-react-ui").then(
+      (mod) => mod.WalletMultiButton
+    ),
+  { ssr: false }
+);
 import { useAppContext } from "../context/context";
 import {
   Card,
@@ -20,11 +27,99 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+const LotteryDisplay = ({
+  wallet,
+  lottery,
+  tickets,
+  userWinningId,
+  isLotteryAuthority,
+  handleBuyTicket,
+  handlePickWinner,
+  handleClaimPrize,
+}) => {
+  if (!wallet.connected) {
+    return null;
+  }
+
+  const prize =
+    lottery && lottery.ticketPrice && lottery.lastTicketId
+      ? ((lottery.ticketPrice * lottery.lastTicketId) / 1000000000).toFixed(2)
+      : "0.00";
+
+  <LotteryDisplay
+    wallet={wallet}
+    lottery={lottery}
+    tickets={tickets} // Add this line
+    userWinningId={userWinningId}
+    isLotteryAuthority={isLotteryAuthority}
+    handleBuyTicket={handleBuyTicket}
+    handlePickWinner={handlePickWinner}
+    handleClaimPrize={handleClaimPrize}
+  />;
+
+  // In LotteryDisplay component
+  if (lottery?.winnerId) {
+    const userHasWinningTicket = userWinningId === lottery.winnerId;
+
+    if (userHasWinningTicket && !lottery.claimed) {
+      return (
+        <div className="space-y-4">
+          <div className="bg-green-900/30 border border-green-500/20 rounded-lg p-4">
+            <p className="text-green-400 font-semibold mb-2">
+              Congratulations! You won this lottery!
+            </p>
+            <button
+              onClick={handleClaimPrize}
+              className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+            >
+              Claim Prize
+            </button>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="space-y-4">
+          <div className="bg-red-900/30 border border-red-500/20 rounded-lg p-4">
+            <p className="text-red-400 text-center">
+              You lost this lottery. Winner has been notified.
+            </p>
+            <p className="text-red-300 text-sm text-center mt-2">
+              Winning ticket #{lottery.winnerId}
+            </p>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // If lottery is still ongoing (no winner picked yet)
+  return (
+    <div className="flex gap-3">
+      <button
+        onClick={handleBuyTicket}
+        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+      >
+        Buy Ticket ({(lottery?.ticketPrice / 1000000000).toFixed(2)} SOL)
+      </button>
+      {isLotteryAuthority && (
+        <button
+          onClick={handlePickWinner}
+          className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+        >
+          Pick Winner
+        </button>
+      )}
+    </div>
+  );
+};
+
 const LotteryDapp = () => {
   const wallet = useWallet();
   const {
     lottery,
     tickets,
+    userWinningId,
     lotteryHistory,
     isLotteryAuthority,
     createLottery,
@@ -32,6 +127,8 @@ const LotteryDapp = () => {
     pickWinner,
     claimPrize,
     userTicketHistory,
+    fetchTickets,
+    getHistory,
   } = useAppContext();
 
   const [loadingDots, setLoadingDots] = React.useState("");
@@ -42,6 +139,12 @@ const LotteryDapp = () => {
     }, 500);
     return () => clearInterval(interval);
   }, []);
+  // Add this useEffect after your existing one
+  useEffect(() => {
+    if (!lottery || !wallet?.publicKey) return;
+    fetchTickets();
+    getHistory();
+  }, [lottery, wallet?.publicKey]);
 
   const handleCreateLottery = async () => {
     try {
@@ -67,11 +170,31 @@ const LotteryDapp = () => {
     }
   };
 
+  const handleClaimPrize = async () => {
+    try {
+      await claimPrize();
+    } catch (error) {
+      console.error("Error claiming prize:", error);
+    }
+  };
+
   const shortenPk = (pk) => {
     if (!pk) return "";
     const pkString = pk.toString();
     return `${pkString.slice(0, 4)}...${pkString.slice(-4)}`;
   };
+
+  const userTicket =
+    tickets && lottery?.winnerId
+      ? tickets.find(
+          (ticket) =>
+            ticket.account.authority.toString() ===
+              wallet.publicKey?.toString() &&
+            ticket.account.id === lottery.winnerId
+        )
+      : null;
+
+  // const userWinningId = userTicket?.account?.id || null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black">
@@ -119,25 +242,16 @@ const LotteryDapp = () => {
                     </span>
                   </div>
 
-                  {wallet.connected && lottery && !lottery.winnerId && (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleBuyTicket}
-                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                      >
-                        Buy Ticket (
-                        {(lottery.ticketPrice / 1000000000).toFixed(2)} SOL)
-                      </button>
-                      {isLotteryAuthority && (
-                        <button
-                          onClick={handlePickWinner}
-                          className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-                        >
-                          Pick Winner
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <LotteryDisplay
+                    wallet={wallet}
+                    lottery={lottery}
+                    tickets={tickets}
+                    userWinningId={userWinningId}
+                    isLotteryAuthority={isLotteryAuthority}
+                    handleBuyTicket={handleBuyTicket}
+                    handlePickWinner={handlePickWinner}
+                    handleClaimPrize={claimPrize}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -324,81 +438,137 @@ const LotteryDapp = () => {
             </CardHeader>
             <CardContent className="p-6">
               <div className="bg-blue-950/50 border border-blue-800/20 rounded-lg p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-white">
-                    Pot:{" "}
-                    {lottery
-                      ? (
-                          (lottery.ticketPrice * lottery.lastTicketId) /
-                          1000000000
-                        ).toFixed(2)
-                      : "0"}{" "}
-                    SOL
-                  </h3>
-                  <span className="px-3 py-1 rounded-full text-sm bg-blue-600/40 text-blue-200">
-                    {lottery?.winnerId ? "Completed" : "Active"}
-                  </span>
+                <div className="grid grid-cols-4 gap-4 py-3 text-sm font-semibold text-center text-blue-200 border-b border-blue-800/20">
+                  <div>Lottery ID</div>
+                  <div>Winner</div>
+                  <div>Winning Ticket</div>
+                  <div>Prize</div>
+                </div>
+
+                <div className="divide-y divide-blue-800/20">
+                  {lotteryHistory && lotteryHistory.length > 0 ? (
+                    lotteryHistory.map((h, i) => (
+                      <div
+                        key={i}
+                        className="grid grid-cols-4 gap-4 py-3 text-center text-blue-100"
+                      >
+                        <div>#{h.lotteryId}</div>
+                        <div>{shortenPk(h.winnerAddress)}</div>
+                        <div>#{h.winnerId}</div>
+                        <div>{h.prize} SOL</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-blue-300">
+                      No lottery history available.
+                    </div>
+                  )}
                 </div>
 
                 {wallet.connected && (
-                  <>
-                    {lottery?.winnerId ? (
-                      lottery.winnerId &&
-                      tickets?.some(
-                        (ticket) =>
-                          ticket.account.id === lottery.winnerId &&
-                          ticket.account.authority.toString() ===
+                  <div className="space-y-3 mt-6">
+                    {(() => {
+                      const allTickets = [
+                        ...(tickets?.filter(
+                          (ticket) =>
+                            ticket.account.authority.toString() ===
                             wallet.publicKey?.toString()
-                      ) &&
-                      !lottery.claimed ? (
-                        <div className="space-y-4">
-                          <div className="bg-green-900/30 border border-green-500/20 rounded-lg p-4">
-                            <p className="text-green-400 font-semibold mb-2">
-                              Congratulations! You won this lottery!
-                            </p>
-                            <p className="text-green-200 text-sm mb-4">
-                              Prize:{" "}
-                              {(
-                                (lottery.ticketPrice * lottery.lastTicketId) /
-                                1000000000
-                              ).toFixed(2)}{" "}
-                              SOL
-                            </p>
-                            <button
-                              onClick={() =>
-                                claimPrize(lottery.id, lottery.winnerId)
-                              }
-                              className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                        ) || []),
+                        ...(lotteryHistory
+                          ?.filter(
+                            (h) =>
+                              h.winnerAddress.toString() ===
+                              wallet.publicKey?.toString()
+                          )
+                          .map((h) => ({
+                            account: {
+                              id: h.winnerId,
+                              lotteryId: h.lotteryId,
+                              authority: wallet.publicKey,
+                            },
+                            historical: true,
+                            prize: h.prize,
+                          })) || []),
+                      ];
+
+                      return allTickets
+                        .sort(
+                          (a, b) =>
+                            b.account.lotteryId - a.account.lotteryId ||
+                            b.account.id - a.account.id
+                        )
+                        .map((ticket, idx) => {
+                          const isWinningTicket =
+                            lottery?.winnerId === ticket.account.id ||
+                            (ticket.historical && ticket.prize);
+                          const potentialPrize = ticket.historical
+                            ? ticket.prize
+                            : (lottery?.ticketPrice * lottery?.lastTicketId) /
+                              1000000000;
+
+                          return (
+                            <div
+                              key={idx}
+                              className={`${
+                                isWinningTicket
+                                  ? "bg-amber-900/30"
+                                  : "bg-slate-800/30"
+                              } p-4 rounded-lg border ${
+                                isWinningTicket
+                                  ? "border-amber-500/20"
+                                  : "border-slate-700"
+                              } hover:border-blue-500/30 transition-all`}
                             >
-                              Claim Prize
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center text-slate-400 py-2">
-                          Lottery completed. Winner has been selected.
-                        </div>
-                      )
-                    ) : (
-                      <div className="flex gap-3">
-                        <button
-                          onClick={handleBuyTicket}
-                          className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                        >
-                          Buy Ticket (
-                          {(lottery?.ticketPrice / 1000000000).toFixed(2)} SOL)
-                        </button>
-                        {isLotteryAuthority && (
-                          <button
-                            onClick={handlePickWinner}
-                            className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-                          >
-                            Pick Winner
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </>
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <p
+                                      className={`${
+                                        isWinningTicket
+                                          ? "text-amber-400"
+                                          : "text-blue-400"
+                                      } text-sm font-medium`}
+                                    >
+                                      Lottery #{ticket.account.lotteryId} -
+                                      Ticket #{ticket.account.id}
+                                      {ticket.historical ? " (Past)" : ""}
+                                    </p>
+                                    {isWinningTicket && (
+                                      <span className="bg-amber-500/20 text-amber-300 text-xs px-2 py-1 rounded-full">
+                                        Winner!
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-slate-400 text-sm mt-1">
+                                    {ticket.historical
+                                      ? `Won: ${ticket.prize} SOL`
+                                      : `Potential Prize: ${potentialPrize?.toFixed(
+                                          2
+                                        )} SOL`}
+                                  </p>
+                                </div>
+                                {isWinningTicket &&
+                                  !ticket.historical &&
+                                  lottery &&
+                                  !lottery.claimed && (
+                                    <button
+                                      onClick={() =>
+                                        claimPrize(
+                                          lottery.id,
+                                          ticket.account.id
+                                        )
+                                      }
+                                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                                    >
+                                      Claim Prize
+                                    </button>
+                                  )}
+                              </div>
+                            </div>
+                          );
+                        });
+                    })()}
+                  </div>
                 )}
               </div>
             </CardContent>

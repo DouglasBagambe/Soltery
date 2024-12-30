@@ -83,6 +83,7 @@ export const AppProvider = ({ children }) => {
         { memcmp: { bytes: wallet.publicKey.toBase58(), offset: 16 } },
       ]);
 
+      // Set userWinningId if user has the winning ticket
       const userWin = userTickets.some(
         (t) => t.account.id === lottery.winnerId
       );
@@ -165,25 +166,26 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const claimPrize = async (lotteryId, ticketId) => {
-    try {
-      const lotteryAddress = await getLotteryAddress(lotteryId);
-      const ticketAddress = await getTicketAddress(lotteryAddress, ticketId);
+  const claimPrize = async () => {
+    if (!lottery || !userWinningId) return;
 
-      await program.methods
-        .claimPrize(new BN(lotteryId), new BN(ticketId))
+    try {
+      const txHash = await program.methods
+        .claimPrize(new BN(lotteryId), new BN(userWinningId))
         .accounts({
           lottery: lotteryAddress,
-          ticket: ticketAddress,
+          ticket: await getTicketAddress(lotteryAddress, userWinningId),
           authority: wallet.publicKey,
           systemProgram: SystemProgram.programId,
         })
         .rpc();
+      await confirmTx(txHash, connection);
 
       await updateState();
+      toast.success("Prize claimed successfully!");
     } catch (error) {
       console.error("Error claiming prize:", error);
-      throw error;
+      toast.error(error.message);
     }
   };
 
@@ -276,10 +278,11 @@ export const AppProvider = ({ children }) => {
         createLottery,
         buyTicket,
         pickWinner,
-        claimPrize,
         fetchTickets,
         getHistory,
         userTicketHistory,
+        userWinningId,
+        claimPrize,
       }}
     >
       {children}
