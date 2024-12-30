@@ -77,15 +77,46 @@ const LotteryDisplay = ({
           </div>
         </div>
       );
-    } else {
+    } else if (userHasWinningTicket && lottery.claimed) {
+      return (
+        <div className="space-y-4">
+          <div className="bg-green-900/30 border border-green-500/20 rounded-lg p-4">
+            <p className="text-green-400 font-semibold mb-2">
+              You won this lottery, and you have successfully claimed your
+              prize!
+            </p>
+          </div>
+        </div>
+      );
+    } else if (!userHasWinningTicket && !lottery.claimed) {
       return (
         <div className="space-y-4">
           <div className="bg-red-900/30 border border-red-500/20 rounded-lg p-4">
             <p className="text-red-400 text-center">
-              You lost this lottery. Winner has been notified.
+              You lost this lottery. Better luck next time.
             </p>
             <p className="text-red-300 text-sm text-center mt-2">
               Winning ticket #{lottery.winnerId}
+            </p>
+          </div>
+        </div>
+      );
+    } else if (!userHasWinningTicket && lottery.claimed) {
+      return (
+        <div className="space-y-4">
+          <div className="bg-red-900/30 border border-red-500/20 rounded-lg p-4">
+            <p className="text-red-400 text-center">
+              The winner has already claimed their prize.
+            </p>
+          </div>
+        </div>
+      );
+    } else if (!lottery?.winnerId) {
+      return (
+        <div className="space-y-4">
+          <div className="bg-red-900/30 border border-red-500/20 rounded-lg p-4">
+            <p className="text-red-400 text-center">
+              You are not participating in this lottery.
             </p>
           </div>
         </div>
