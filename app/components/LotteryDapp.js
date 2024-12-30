@@ -56,7 +56,23 @@ const LotteryDisplay = ({
   if (lottery?.winnerId) {
     const userHasWinningTicket = userWinningId === lottery.winnerId;
 
-    if (userHasWinningTicket && lottery.claimed) {
+    if (userHasWinningTicket && !lottery.claimed) {
+      return (
+        <div className="space-y-4">
+          <div className="bg-green-900/30 border border-green-500/20 rounded-lg p-4">
+            <p className="text-green-400 font-semibold mb-2">
+              Congratulations! You won this lottery!
+            </p>
+            <button
+              onClick={handleClaimPrize}
+              className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+            >
+              Claim Prize
+            </button>
+          </div>
+        </div>
+      );
+    } else if (userHasWinningTicket && lottery.claimed) {
       return (
         <div className="space-y-4">
           <div className="bg-green-900/30 border border-green-500/20 rounded-lg p-4">
