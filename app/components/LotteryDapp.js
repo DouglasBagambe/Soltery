@@ -41,43 +41,22 @@ const LotteryDisplay = ({
     return null;
   }
 
+  // Check if user has any tickets for this lottery
+  const userHasTickets = tickets?.some(
+    (ticket) =>
+      ticket.account.authority.toString() === wallet.publicKey.toString()
+  );
+  console.log("Tickets:", tickets);
+
   const prize =
     lottery && lottery.ticketPrice && lottery.lastTicketId
       ? ((lottery.ticketPrice * lottery.lastTicketId) / 1000000000).toFixed(2)
       : "0.00";
 
-  <LotteryDisplay
-    wallet={wallet}
-    lottery={lottery}
-    tickets={tickets} // Add this line
-    userWinningId={userWinningId}
-    isLotteryAuthority={isLotteryAuthority}
-    handleBuyTicket={handleBuyTicket}
-    handlePickWinner={handlePickWinner}
-    handleClaimPrize={handleClaimPrize}
-  />;
-
-  // In LotteryDisplay component
   if (lottery?.winnerId) {
     const userHasWinningTicket = userWinningId === lottery.winnerId;
 
-    if (userHasWinningTicket && !lottery.claimed) {
-      return (
-        <div className="space-y-4">
-          <div className="bg-green-900/30 border border-green-500/20 rounded-lg p-4">
-            <p className="text-green-400 font-semibold mb-2">
-              Congratulations! You won this lottery!
-            </p>
-            <button
-              onClick={handleClaimPrize}
-              className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
-            >
-              Claim Prize
-            </button>
-          </div>
-        </div>
-      );
-    } else if (userHasWinningTicket && lottery.claimed) {
+    if (userHasWinningTicket && lottery.claimed) {
       return (
         <div className="space-y-4">
           <div className="bg-green-900/30 border border-green-500/20 rounded-lg p-4">
@@ -88,7 +67,7 @@ const LotteryDisplay = ({
           </div>
         </div>
       );
-    } else if (!userHasWinningTicket && !lottery.claimed) {
+    } else if (!userHasWinningTicket && !lottery.claimed && userHasTickets) {
       return (
         <div className="space-y-4">
           <div className="bg-red-900/30 border border-red-500/20 rounded-lg p-4">
@@ -101,7 +80,7 @@ const LotteryDisplay = ({
           </div>
         </div>
       );
-    } else if (!userHasWinningTicket && lottery.claimed) {
+    } else if (!userHasWinningTicket && lottery.claimed && userHasTickets) {
       return (
         <div className="space-y-4">
           <div className="bg-red-900/30 border border-red-500/20 rounded-lg p-4">
@@ -111,12 +90,15 @@ const LotteryDisplay = ({
           </div>
         </div>
       );
-    } else if (!lottery?.winnerId) {
+    } else if (!userHasTickets) {
       return (
         <div className="space-y-4">
-          <div className="bg-red-900/30 border border-red-500/20 rounded-lg p-4">
-            <p className="text-red-400 text-center">
-              You are not participating in this lottery.
+          <div className="bg-purple-900/30 border border-purple-500/20 rounded-lg p-4">
+            <p className="text-red-500 text-center font-bold">
+              Lottery Closed!
+            </p>
+            <p className="text-white text-sm text-center mt-2">
+              You did not participate in this lottery.
             </p>
           </div>
         </div>
@@ -243,6 +225,22 @@ const LotteryDapp = () => {
             <WalletMultiButton />
           </div>
         </div>
+        {/* Debug view */}
+        {/* <div className="mb-4 p-4 bg-gray-900 rounded-lg">
+          <p className="text-xs text-gray-400">Debug Info:</p>
+          <pre className="text-xs text-gray-400 overflow-auto">
+            {JSON.stringify(
+              {
+                ticketsCount: tickets?.length || 0,
+                ticketDetails: tickets,
+                userPubKey: wallet.publicKey?.toString(),
+                lotteryId: lottery?.id,
+              },
+              null,
+              2
+            )}
+          </pre>
+        </div> */}
       </header>
 
       <main className="max-w-7xl mx-auto px-6 pt-28 pb-12">

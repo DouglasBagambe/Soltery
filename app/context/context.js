@@ -200,16 +200,22 @@ export const AppProvider = ({ children }) => {
   };
 
   const fetchTickets = async () => {
+    if (!program || !lotteryId) {
+      console.log("Missing dependencies:", { program: !!program, lotteryId });
+      return;
+    }
+
     try {
-      const tickets = await program.account.ticket.all([
-        {
-          memcmp: {
-            offset: 4,
-            bytes: lotteryId.toString(),
-          },
-        },
-      ]);
-      setTickets(tickets);
+      console.log("Fetching tickets for lottery:", lotteryId);
+      const tickets = await program.account.ticket.all();
+      console.log("All tickets:", tickets);
+
+      const filteredTickets = tickets.filter(
+        (ticket) => ticket.account.lotteryId === lotteryId
+      );
+      console.log("Filtered tickets:", filteredTickets);
+
+      setTickets(filteredTickets);
     } catch (error) {
       console.error("Error fetching tickets:", error);
     }
